@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 export default function AdminDashboard() {
   const router = useRouter();
 
-  // 🔒 BARREIRA DE SEGURANÇA: Passando o parâmetro "admin" para obrigar a verificação no Firestore
+  // Passando o parâmetro "admin" para obrigar a verificação no Firestore
   const { userData, loading } = useAuth("admin");
 
   const handleLogout = async () => {
