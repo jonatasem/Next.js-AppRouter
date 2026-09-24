@@ -1,10 +1,12 @@
+// lib/useAuth.ts
 import { useState, useEffect } from "react";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 
-export function useAuth() {
+// Adicionado o parâmetro opcional 'requiredRole'
+export function useAuth(requiredRole?: "client" | "admin") {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<{ name: string; role: string } | null>(null);
@@ -16,16 +18,24 @@ export function useAuth() {
         setUser(currentUser);
         
         try {
-          // Busca o nome e a role direto do Firestore
           const userDocRef = doc(db, "users", currentUser.uid);
           const userDoc = await getDoc(userDocRef);
 
           if (userDoc.exists()) {
             const data = userDoc.data();
+            const role = data.role || "client";
+            
             setUserData({
-              name: data.name,
-              role: data.role
+              name: data.name || "",
+              role: role
             });
+
+            // Se a página exigir 'admin' e o usuário for 'client'
+            if (requiredRole && role !== requiredRole) {
+              // Expulsa o cliente intruso imediatamente para o painel dele
+              router.push(role === "admin" ? "/admin" : "/client");
+              return;
+            }
           }
         } catch (error) {
           console.error("Erro ao buscar dados do usuário:", error);
@@ -39,7 +49,7 @@ export function useAuth() {
     });
 
     return () => unsubscribe();
-  }, [router]);
+  }, [router, requiredRole]);
 
   return { user, userData, loading };
 }

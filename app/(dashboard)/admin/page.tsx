@@ -1,5 +1,7 @@
 "use client";
 
+import { useAuth } from "@/hooks/useAuth";
+import { LoadingScreen } from "@/components/ui/loading-screen";
 import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";
@@ -10,10 +12,18 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 export default function AdminDashboard() {
   const router = useRouter();
 
+  // 🔒 BARREIRA DE SEGURANÇA: Passando o parâmetro "admin" para obrigar a verificação no Firestore
+  const { userData, loading } = useAuth("admin");
+
   const handleLogout = async () => {
     await signOut(auth);
     router.push("/login");
   };
+
+  // Enquanto o Firebase faz a leitura assíncrona da role no banco, exibe o feedback profissional
+  if (loading) {
+    return <LoadingScreen message="Validando permissões administrativas..." />;
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50">
@@ -27,6 +37,10 @@ export default function AdminDashboard() {
           </div>
           
           <div className="flex items-center gap-3">
+            {/* Exibe o nome do administrador de forma reativa caso queira */}
+            <div className="hidden md:block text-xs text-slate-400 font-medium">
+              Logado como: <span className="text-slate-200 font-semibold">{userData?.name || "Administrador"}</span>
+            </div>
             <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white rounded-full cursor-pointer">
               <Settings className="h-5 w-5" />
             </Button>
@@ -97,7 +111,7 @@ export default function AdminDashboard() {
         {/* Gerenciamento Operacional Abaixo */}
         <Card className="rounded-2xl border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900">
           <CardHeader>
-            <CardTitle>Agenda Consolada do Dia</CardTitle>
+            <CardTitle>Agenda Consolidada do Dia</CardTitle>
             <CardDescription>Monitore os horários ocupados por profissional.</CardDescription>
           </CardHeader>
           <CardContent className="h-64 flex flex-col items-center justify-center text-slate-400 text-sm gap-2 border-t border-slate-100 dark:border-slate-800 mt-4">
